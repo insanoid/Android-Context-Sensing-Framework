@@ -101,15 +101,47 @@ public class BatteryInfo extends BroadcastReceiver {
 		if(!deviceCharging)
 			currentChargingSource = BatteryChargeType.BATTERY_PLUGGED_NO;
 
+
+		boolean isNotificationNeeded = false;
+		if(currentChargingSource != ContextMonitor.getInstance(mContext).getCurrentChargingSource()){
+			isNotificationNeeded = true;
+		}
+
+		if(deviceCharging != ContextMonitor.getInstance(mContext).getDeviceCharging()){
+			isNotificationNeeded = true;
+		}
+
+		if(battPct<15 && ContextMonitor.getInstance(mContext).getBatteryLevel()>=15){
+			isNotificationNeeded = true;
+		}else if(battPct<10 && ContextMonitor.getInstance(mContext).getBatteryLevel()>=10){
+			isNotificationNeeded = true;
+		}else if(battPct<30 && ContextMonitor.getInstance(mContext).getBatteryLevel()>=30){
+			isNotificationNeeded = true;
+		}else if(battPct<50 && ContextMonitor.getInstance(mContext).getBatteryLevel()>=50){
+			isNotificationNeeded = true;
+		}else if(battPct>=50 && ContextMonitor.getInstance(mContext).getBatteryLevel()<50){
+			isNotificationNeeded = true;
+		}else if(battPct>=80 && ContextMonitor.getInstance(mContext).getBatteryLevel()<80){
+			isNotificationNeeded = true;
+		}else if(battPct>=95 && ContextMonitor.getInstance(mContext).getBatteryLevel()<95){
+			isNotificationNeeded = true;
+		}
+
+
 		ContextMonitor.getInstance(mContext).setCurrentChargingSource(currentChargingSource);
 		ContextMonitor.getInstance(mContext).setDeviceCharging(deviceCharging);
 		ContextMonitor.getInstance(mContext).setBatteryLevel(battPct);
 
-		Intent proxIntent = new Intent(Constants.LOC_NOTIFY);
-		proxIntent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
-		proxIntent.putExtra(Constants.BATTERY_NOTIFY,toString());
-		mContext.sendBroadcast(proxIntent);
 
+		batteryPercentage = battPct;
+		isCharging =	deviceCharging;
+
+		if(isNotificationNeeded==true){
+			Intent proxIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+			proxIntent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
+			proxIntent.putExtra(Constants.BATTERY_NOTIFY,toString());
+			mContext.sendBroadcast(proxIntent);
+		}
 	}
 
 }

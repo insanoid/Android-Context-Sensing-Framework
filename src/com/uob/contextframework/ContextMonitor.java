@@ -1,6 +1,7 @@
 package com.uob.contextframework;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -20,11 +21,13 @@ import android.util.Log;
 
 import com.uob.contextframework.baseclasses.BatteryChargeType;
 import com.uob.contextframework.baseclasses.BatteryInfo;
+import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.NetworkConnectionStatus;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.SignalInfoModel;
 import com.uob.contextframework.baseclasses.WiFiInfo;
 import com.uob.contextframework.baseclasses.WifiAccessPointModel;
+import com.uob.contextframework.support.CalendarService;
 import com.uob.contextframework.support.Constants;
 
 public class ContextMonitor {
@@ -37,6 +40,7 @@ public class ContextMonitor {
 	private Timer locationMonitoringTimer;
 	private Timer dataConnectionStateMonitorTimer;
 	private Timer wifiMonitorTimer;
+	private Timer calendarMonitorTimer;
 	
 	//Location Context
 	private Location bestAvailableLocation;
@@ -59,6 +63,9 @@ public class ContextMonitor {
 	//Network Info.
 	private NetworkConnectionStatus networkConnectionStatus;
 
+	//Calendar Info.
+	List<Event> userCurrentEventList;
+	
 	/**
 	 * Destroy connections if needed.
 	 */
@@ -152,6 +159,22 @@ public class ContextMonitor {
 		wifiBroadcastListner = null;
 	}
 
+	public void initiateCalendarServices(long pollingTime) {
+
+		userCurrentEventList = new ArrayList<Event>();
+		calendarMonitorTimer = new Timer("CALENDAR_POLLER");
+		calendarMonitorTimer.schedule(calendarTask, 0, pollingTime>0?pollingTime:Constants.LONG_POLLING_INTERVAL);
+	}
+
+	public void stopCalendarServices(){
+		userCurrentEventList = new ArrayList<Event>();
+		calendarMonitorTimer.cancel();
+	}
+
+
+	
+	
+	
 	private TimerTask wifiScannerTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -162,6 +185,14 @@ public class ContextMonitor {
 		}
 	};
 	
+	private TimerTask calendarTask = new TimerTask() {
+		@Override
+		public void run() {
+
+			userCurrentEventList = CalendarService.readCalendarEvents(mContext);
+			Event.sendBroadcast(mContext);
+		}
+	};
 	private TimerTask minuteDataTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -353,5 +384,19 @@ public class ContextMonitor {
 	public void setNetworkConnectionStatus(
 			NetworkConnectionStatus networkConnectionStatus) {
 		this.networkConnectionStatus = networkConnectionStatus;
+	}
+
+	/**
+	 * @return the userCurrentEventList
+	 */
+	public List<Event> getUserCurrentEventList() {
+		return userCurrentEventList;
+	}
+
+	/**
+	 * @param userCurrentEventList the userCurrentEventList to set
+	 */
+	public void setUserCurrentEventList(List<Event> userCurrentEventList) {
+		this.userCurrentEventList = userCurrentEventList;
 	}
 }

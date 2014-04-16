@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.json.JSONArray;
+
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
@@ -11,6 +13,7 @@ import android.os.Handler;
 
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.DeviceInfo;
+import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.LocationInfo;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.WiFiInfo;
@@ -22,7 +25,7 @@ import com.uob.contextframework.support.ContextManagerServices;
 public class ContextManager {
 
 	private Context mContext;
-	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer;
+	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer;
 
 	public ContextManager(Context mContext) {
 		super();
@@ -67,6 +70,15 @@ public class ContextManager {
 			wifiTimer.schedule(wifiUpdateTask, 0, minimumUpdateTime);
 
 		}
+		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_EVENTS){
+
+			ContextMonitor.getInstance(mContext).initiateCalendarServices(pollingTime);
+			eventsTimer = new Timer("EVENT_TIMER");
+			eventsTimer.schedule(eventsUpdateTask, 0, minimumUpdateTime);
+
+		}
+		
 
 	}
 
@@ -74,19 +86,29 @@ public class ContextManager {
 	public void stopMonitoringContext(ContextManagerServices mService){
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_LOCATION){
+			locationTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopLocationServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_BATTERY){
+			batteryTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopBatteryServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_SIGNALS){
+			signalTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopSignalServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_WIFI){
+			wifiTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopWiFiServices();
+		}
+		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_EVENTS){
+			eventsTimer.cancel();
+			ContextMonitor.getInstance(mContext).stopCalendarServices();
+
 		}
 	}
 
@@ -157,6 +179,28 @@ public class ContextManager {
 					intent.putExtra(Constants.INTENT_TYPE, Constants.WIFI_NOTIFY);
 					intent.putExtra(Constants.WIFI_NOTIFY, wifiInfo.toString());
 					mContext.sendBroadcast(intent);
+				}
+			});	
+		}
+	};
+	
+	
+	TimerTask eventsUpdateTask = new TimerTask() {
+
+		@Override
+		public void run() {
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					JSONArray jArray = Event.currentEventList(mContext);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.EVENT_NOTIFY);
+					intent.putExtra(Constants.EVENT_NOTIFY, jArray.toString());
+					mContext.sendBroadcast(intent);
+					
 				}
 			});	
 		}

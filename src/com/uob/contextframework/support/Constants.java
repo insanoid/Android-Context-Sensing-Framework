@@ -9,6 +9,7 @@ public class Constants {
 		
 		public static long SHORT_POLLING_INTERVAL =  15*1000L; 
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
+		public static final long LONG_POLLING_INTERVAL = 1*60*1000L;
 		
 		
 		public static String TAG = "CONTEXT_FRAMEWORK";
@@ -47,4 +48,5 @@ public class Constants {
 		public static String BATTERY_NOTIFY = "BATTERY_UPDATE_NOTIFY";
 		public static String SIGNAL_NOTIFY = "SIGNAL_UPDATE_NOTIFY";
 		public static String WIFI_NOTIFY = "WIFI_UPDATE_NOTIFY";
+		public static String EVENT_NOTIFY = "EVENT_UPDATE_NOTIFY";
 }

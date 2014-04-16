@@ -94,8 +94,8 @@ public class WiFiInfo extends BroadcastReceiver {
         
 		
 		Intent signalIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-		signalIntent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
-		signalIntent.putExtra(Constants.SIGNAL_NOTIFY,toString());
+		signalIntent.putExtra(Constants.INTENT_TYPE, Constants.WIFI_NOTIFY);
+		signalIntent.putExtra(Constants.WIFI_NOTIFY,toString());
 		mContext.sendBroadcast(signalIntent);
 		
      }

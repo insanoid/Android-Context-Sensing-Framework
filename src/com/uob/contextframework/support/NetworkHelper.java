@@ -3,6 +3,7 @@ package com.uob.contextframework.support;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiManager;
 
 import com.uob.contextframework.ContextMonitor;
 import com.uob.contextframework.baseclasses.NetworkConnectionStatus;
@@ -52,4 +53,12 @@ public class NetworkHelper {
 
 		return mWifi.isConnected();
 	}
+	
+	public boolean isWiFiTurnedOn(Context con) {
+
+		 WifiManager mWifi = (WifiManager) con.getSystemService(Context.WIFI_SERVICE);
+
+		return mWifi.isWifiEnabled();
+	}
+	
 }

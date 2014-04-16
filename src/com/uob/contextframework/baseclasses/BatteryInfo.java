@@ -137,11 +137,13 @@ public class BatteryInfo extends BroadcastReceiver {
 		isCharging =	deviceCharging;
 
 		if(isNotificationNeeded==true){
-			Intent proxIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-			proxIntent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
-			proxIntent.putExtra(Constants.BATTERY_NOTIFY,toString());
-			mContext.sendBroadcast(proxIntent);
+			pushBroadcast();
 		}
 	}
-
+	public void pushBroadcast(){
+		Intent proxIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+		proxIntent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
+		proxIntent.putExtra(Constants.BATTERY_NOTIFY,toString());
+		mContext.sendBroadcast(proxIntent);
+	}
 }

@@ -10,6 +10,7 @@ public class Constants {
 		public static long SHORT_POLLING_INTERVAL =  15*1000L; 
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
 		
+		
 		public static String TAG = "CONTEXT_FRAMEWORK";
 		
 		
@@ -35,7 +36,7 @@ public class Constants {
 		public static String CONNTECTION_TYPE = "CONN_TYPE";
 		public static String NETWORK_STATUS = "NET_CONNECTED";
 		public static String IS_WIFI_ON = "IS_WIFI_ON"; 
-		
+		public static String IS_WIFI_AVAILABLE = "IS_WIFI_AVAIL";
 		
 		// Intent Tags
 		

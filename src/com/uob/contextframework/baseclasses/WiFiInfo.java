@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.util.Log;
 
 import com.uob.contextframework.ContextMonitor;
 import com.uob.contextframework.support.Constants;
@@ -22,11 +23,19 @@ public class WiFiInfo extends BroadcastReceiver {
 	Context mContext;
 	ArrayList<WifiAccessPointModel> accessPoints;
 	boolean isWifiAvailable;
+	boolean isWifiEnabled;
 	
 	public WiFiInfo(Context context){
 		mContext = context;
 		accessPoints = ContextMonitor.getInstance(context).getAccessPoints();
 		isWifiAvailable = NetworkHelper.getInstance(context).isWiFiOn(context);
+		isWifiEnabled = NetworkHelper.getInstance(context).isWiFiTurnedOn(context);
+	}
+	
+	public void updateState(){
+		isWifiAvailable = NetworkHelper.getInstance(mContext).isWiFiOn(mContext);
+		isWifiEnabled = NetworkHelper.getInstance(mContext).isWiFiTurnedOn(mContext);
+		accessPoints = null;
 	}
 	
 	@Override
@@ -40,10 +49,12 @@ public class WiFiInfo extends BroadcastReceiver {
 		JSONObject jObject = new JSONObject();
 		try {
 		
-			jObject.put(Constants.IS_WIFI_ON, isWifiAvailable);
-			jObject.put(Constants.ACCESSPOINT, accessPointJSON());
-			jObject.put(Constants.ACCESSPOINT_COUNT, (accessPoints==null)?String.valueOf(0):String.valueOf(accessPoints.size()));
-			
+			jObject.put(Constants.IS_WIFI_AVAILABLE, isWifiAvailable);
+			jObject.put(Constants.IS_WIFI_ON, isWifiEnabled);
+			if(isWifiEnabled){
+				jObject.put(Constants.ACCESSPOINT, accessPointJSON());
+				jObject.put(Constants.ACCESSPOINT_COUNT, (accessPoints==null)?String.valueOf(0):String.valueOf(accessPoints.size()));
+			}
 		} catch (JSONException e) {
 
 		}
@@ -67,7 +78,7 @@ public class WiFiInfo extends BroadcastReceiver {
         List<ScanResult> wifiList = mainWifi.getScanResults();
        
         ArrayList<WifiAccessPointModel> accessPointsList = new ArrayList<WifiAccessPointModel>();
-        
+        Log.e("----->","--"+accessPointsList);
         for (int i = 0; i < wifiList.size(); i++) {
             
         	ScanResult scanResult = wifiList.get(i);

@@ -1,4 +1,4 @@
-package com.uob.contextframework;
+`package com.uob.contextframework;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
+import android.os.Handler;
 
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.DeviceInfo;
@@ -27,11 +28,11 @@ public class ContextManager {
 		super();
 		this.mContext = mContext;
 	}
-	
+
 	public void monitorContext(ContextManagerServices mService, long minimumUpdateTime){
 		monitorContext(mService, minimumUpdateTime,0, null);
 	}
-	
+
 
 	public void monitorContext(ContextManagerServices mService, long minimumUpdateTime, long pollingTime, ArrayList<Integer> flags ){
 
@@ -58,7 +59,7 @@ public class ContextManager {
 			signalTimer.schedule(signalUpdateTask, 0, minimumUpdateTime);
 
 		}
-		
+
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_WIFI){
 
 			ContextMonitor.getInstance(mContext).initiateWiFiServices(pollingTime);
@@ -69,7 +70,7 @@ public class ContextManager {
 
 	}
 
-	
+
 	public void stopMonitoringContext(ContextManagerServices mService){
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_LOCATION){
@@ -83,12 +84,12 @@ public class ContextManager {
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_SIGNALS){
 			ContextMonitor.getInstance(mContext).stopSignalServices();
 		}
-		
+
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_WIFI){
 			ContextMonitor.getInstance(mContext).stopWiFiServices();
 		}
 	}
-	
+
 	TimerTask locationUpdateTask = new TimerTask() {
 
 		@Override
@@ -106,11 +107,18 @@ public class ContextManager {
 
 		@Override
 		public void run() {
-			BatteryInfo batteryInfo = new BatteryInfo(mContext);
-			Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-			intent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
-			intent.putExtra(Constants.BATTERY_NOTIFY,batteryInfo.toString());
-			mContext.sendBroadcast(intent);
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					BatteryInfo batteryInfo = new BatteryInfo(mContext);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
+					intent.putExtra(Constants.BATTERY_NOTIFY,batteryInfo.toString());
+					mContext.sendBroadcast(intent);
+				}
+			});	
 		}
 	};
 
@@ -118,27 +126,41 @@ public class ContextManager {
 
 		@Override
 		public void run() {
-			SignalInfo signalInfo = new SignalInfo(mContext);
-			Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-			intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
-			intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
-			mContext.sendBroadcast(intent);
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					SignalInfo signalInfo = new SignalInfo(mContext);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
+					intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
+					mContext.sendBroadcast(intent);
+				}
+			});	
 		}
 	};
 
-	
 	TimerTask wifiUpdateTask = new TimerTask() {
 
 		@Override
 		public void run() {
-			WiFiInfo wifiInfo = new WiFiInfo(mContext);
-			Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-			intent.putExtra(Constants.INTENT_TYPE, Constants.WIFI_NOTIFY);
-			intent.putExtra(Constants.WIFI_NOTIFY, wifiInfo.toString());
-			mContext.sendBroadcast(intent);
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					WiFiInfo wifiInfo = new WiFiInfo(mContext);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.WIFI_NOTIFY);
+					intent.putExtra(Constants.WIFI_NOTIFY, wifiInfo.toString());
+					mContext.sendBroadcast(intent);
+				}
+			});	
 		}
 	};
-	
 
 	public static DeviceInfo getPhoneInformation(){
 		return new DeviceInfo();

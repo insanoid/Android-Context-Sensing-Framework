@@ -28,19 +28,20 @@ import com.uob.contextframework.baseclasses.WifiAccessPointModel;
 import com.uob.contextframework.support.Constants;
 
 public class ContextMonitor {
-	
+
 	//Class Properties.
 	private static ContextMonitor mInstance = null;
 	private Context mContext;
-	
+
 	//Timers.
 	private Timer locationMonitoringTimer;
 	private Timer dataConnectionStateMonitorTimer;
-		
+	private Timer wifiMonitorTimer;
+	
 	//Location Context
 	private Location bestAvailableLocation;
 	private String locationNetworkProvider;
-	
+
 	// Battery Context
 	BatteryInfo batteryInfo;
 	private Boolean deviceCharging = false; 
@@ -50,25 +51,25 @@ public class ContextMonitor {
 	// Signal Info.
 	public SignalInfoModel signalInfo;
 	public SignalInfo singalInfoReceiver;
-	
+
 	//WiFi Info.
 	private ArrayList<WifiAccessPointModel> accessPoints;
 	private WiFiInfo wifiBroadcastListner;
-	
+
 	//Network Info.
 	private NetworkConnectionStatus networkConnectionStatus;
-	
+
 	/**
 	 * Destroy connections if needed.
 	 */
 	public void destroy(){
-		
+
 		if(batteryInfo!=null)
 			mContext.unregisterReceiver(batteryInfo);
-		
+
 		if(wifiBroadcastListner!=null)
 			mContext.unregisterReceiver(wifiBroadcastListner);
-		
+
 	}
 
 	public static ContextMonitor getInstance(Context _ctx){
@@ -93,20 +94,20 @@ public class ContextMonitor {
 
 
 	}
-	
+
 	public void initiateLocationServices(long pollingTime, ArrayList<Integer> flags) {
-		
-		locationNetworkProvider = LocationManager.GPS_PROVIDER;
+
+		locationNetworkProvider = LocationManager.NETWORK_PROVIDER;
 		if(flags!=null){
 			if(flags.get(0)==1){
-				locationNetworkProvider = LocationManager.NETWORK_PROVIDER;
+				locationNetworkProvider = LocationManager.GPS_PROVIDER;
 			}
 		}
 		bestAvailableLocation = new Location(LocationManager.NETWORK_PROVIDER);
 		locationMonitoringTimer = new Timer("LONG_TERM_POLLER");
 		locationMonitoringTimer.schedule(longTermTasks, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
-	
+
 	public void stopLocationServices(){
 		locationMonitoringTimer.cancel();
 	}
@@ -115,24 +116,25 @@ public class ContextMonitor {
 		batteryInfo = new BatteryInfo(mContext);
 		IntentFilter batteryLevelFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		mContext.registerReceiver(batteryInfo, batteryLevelFilter);
+		batteryInfo.pushBroadcast();
 	}
-	
+
 	public void stopBatteryServices(){
 		mContext.unregisterReceiver(batteryInfo);
 		batteryInfo = null;
 	}
-	
+
 	@SuppressLint("NewApi")
 	public void initiateSignalServices(long pollingTime) {
 		signalInfo = new SignalInfoModel();
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
 		dataConnectionStateMonitorTimer.schedule(minuteDataTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-        Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-        signalInfo.setNearByCells(Tel.getAllCellInfo());
-        signalInfo.setDataConnectionState(Tel.getDataState());
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		signalInfo.setNearByCells(Tel.getAllCellInfo());
+		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
-	
+
 	public void stopSignalServices(){
 		dataConnectionStateMonitorTimer.cancel();
 	}
@@ -141,12 +143,24 @@ public class ContextMonitor {
 		networkConnectionStatus = new NetworkConnectionStatus();
 		wifiBroadcastListner = new WiFiInfo(mContext);
 		mContext.registerReceiver(wifiBroadcastListner, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+		wifiMonitorTimer = new Timer("WIFI_POLLER");
+		wifiMonitorTimer.schedule(wifiScannerTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
-	
+
 	public void stopWiFiServices(){
 		mContext.unregisterReceiver(wifiBroadcastListner);
 		wifiBroadcastListner = null;
 	}
+
+	private TimerTask wifiScannerTask = new TimerTask() {
+		@Override
+		public void run() {
+			wifiBroadcastListner.updateState();
+			WifiManager mainWifi = (WifiManager) mContext.getSystemService(Context.WIFI_SERVICE);
+			mainWifi.startScan();
+
+		}
+	};
 	
 	private TimerTask minuteDataTask = new TimerTask() {
 		@Override
@@ -161,12 +175,12 @@ public class ContextMonitor {
 			}
 		}
 	};
-	
+
 	void updateDataState(){
 		TelephonyManager tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 		signalInfo.setDataConnectionState(tel.getDataState());
 	}
-	
+
 	/**
 	 * Monitors long term polling tasks (set by polling interval)
 	 */
@@ -206,7 +220,7 @@ public class ContextMonitor {
 
 				@Override
 				public void onLocationChanged(Location arg0) {
-					
+
 					Log.e(Constants.TAG,"Location Updated Broadcasted");
 					setBestAvailableLocation(arg0);
 

@@ -11,7 +11,6 @@ public class Constants {
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
 		public static final long LONG_POLLING_INTERVAL = 1*60*1000L;
 		
-		
 		public static String TAG = "CONTEXT_FRAMEWORK";
 		
 		
@@ -39,6 +38,13 @@ public class Constants {
 		public static String IS_WIFI_ON = "IS_WIFI_ON"; 
 		public static String IS_WIFI_AVAILABLE = "IS_WIFI_AVAIL";
 		
+		public static String DEVICE_NAME = "DEVICE_NAME";
+		public static String DEVICE_ADDRESS = "DEVICE_ADDRESS";
+		public static String DEVICE_PAIRED = "IS_PAIRED";
+		public static String IS_BLUETOOH_ON = "BLUETOOTH_ON";
+		public static String BLUETOOH_DEVICES = "BLUETOOTH_DEVICE";
+		
+		
 		// Intent Tags
 		
 		public static String CONTEXT_CHANGE_NOTIFY = "CONTEXT_CHANGE_NOTIFY";
@@ -49,4 +55,5 @@ public class Constants {
 		public static String SIGNAL_NOTIFY = "SIGNAL_UPDATE_NOTIFY";
 		public static String WIFI_NOTIFY = "WIFI_UPDATE_NOTIFY";
 		public static String EVENT_NOTIFY = "EVENT_UPDATE_NOTIFY";
+		public static String BLUETOOTH_NOTIFY = "BLUETOOTH_UPDATE_NOTIFY";
 }

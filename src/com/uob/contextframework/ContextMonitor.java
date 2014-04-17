@@ -2,10 +2,13 @@ package com.uob.contextframework;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import android.annotation.SuppressLint;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -21,6 +24,7 @@ import android.util.Log;
 
 import com.uob.contextframework.baseclasses.BatteryChargeType;
 import com.uob.contextframework.baseclasses.BatteryInfo;
+import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.NetworkConnectionStatus;
 import com.uob.contextframework.baseclasses.SignalInfo;
@@ -41,7 +45,8 @@ public class ContextMonitor {
 	private Timer dataConnectionStateMonitorTimer;
 	private Timer wifiMonitorTimer;
 	private Timer calendarMonitorTimer;
-	
+	private Timer bluetoothMonitorTimer;
+
 	//Location Context
 	private Location bestAvailableLocation;
 	private String locationNetworkProvider;
@@ -65,7 +70,12 @@ public class ContextMonitor {
 
 	//Calendar Info.
 	List<Event> userCurrentEventList;
-	
+
+	//Bluetooth Device Info.
+	List<BluetoothInfo> nearbyBluetoothAccessPoints;
+	Boolean isBluetoothAvailable;
+	BluetoothInfo bluetoothInfoBroadcastListner;
+
 	/**
 	 * Destroy connections if needed.
 	 */
@@ -170,11 +180,22 @@ public class ContextMonitor {
 		userCurrentEventList = new ArrayList<Event>();
 		calendarMonitorTimer.cancel();
 	}
+	
+	public void initiateBluetoothServices(long pollingTime) {
+
+		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
+		bluetoothMonitorTimer = new Timer("BLUETOOTH_POLLER");
+		isBluetoothAvailable = false;
+		bluetoothMonitorTimer.schedule(bluetoothTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
+	}
+
+	public void stopBluetoothServices(){
+		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
+		bluetoothMonitorTimer.cancel();
+	}
+	
 
 
-	
-	
-	
 	private TimerTask wifiScannerTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -184,7 +205,7 @@ public class ContextMonitor {
 
 		}
 	};
-	
+
 	private TimerTask calendarTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -193,6 +214,7 @@ public class ContextMonitor {
 			Event.sendBroadcast(mContext);
 		}
 	};
+
 	private TimerTask minuteDataTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -206,6 +228,20 @@ public class ContextMonitor {
 			}
 		}
 	};
+
+	private TimerTask bluetoothTask = new TimerTask() {
+		@Override
+		public void run() {
+			BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+			bluetoothInfoBroadcastListner = new BluetoothInfo();
+			IntentFilter intentFound = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+			IntentFilter itentfinished = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+			mContext.registerReceiver(bluetoothInfoBroadcastListner, intentFound);
+			mContext.registerReceiver(bluetoothInfoBroadcastListner, itentfinished);
+			bluetoothAdapter.startDiscovery();
+		}
+	};
+
 
 	void updateDataState(){
 		TelephonyManager tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
@@ -398,5 +434,34 @@ public class ContextMonitor {
 	 */
 	public void setUserCurrentEventList(List<Event> userCurrentEventList) {
 		this.userCurrentEventList = userCurrentEventList;
+	}
+
+	/**
+	 * @return the nearbyBluetoothAccessPoints
+	 */
+	public List<BluetoothInfo> getNearbyBluetoothAccessPoints() {
+		return nearbyBluetoothAccessPoints;
+	}
+
+	/**
+	 * @param nearbyBluetoothAccessPoints the nearbyBluetoothAccessPoints to set
+	 */
+	public void setNearbyBluetoothAccessPoints(
+			List<BluetoothInfo> nearbyBluetoothAccessPoints) {
+		this.nearbyBluetoothAccessPoints = nearbyBluetoothAccessPoints;
+	}
+
+	/**
+	 * @return the isBluetoothAvailable
+	 */
+	public Boolean getIsBluetoothAvailable() {
+		return isBluetoothAvailable;
+	}
+
+	/**
+	 * @param isBluetoothAvailable the isBluetoothAvailable to set
+	 */
+	public void setIsBluetoothAvailable(Boolean isBluetoothAvailable) {
+		this.isBluetoothAvailable = isBluetoothAvailable;
 	}
 }

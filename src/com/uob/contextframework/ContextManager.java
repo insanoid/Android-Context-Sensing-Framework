@@ -12,6 +12,7 @@ import android.location.Location;
 import android.os.Handler;
 
 import com.uob.contextframework.baseclasses.BatteryInfo;
+import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.DeviceInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.LocationInfo;
@@ -25,7 +26,7 @@ import com.uob.contextframework.support.ContextManagerServices;
 public class ContextManager {
 
 	private Context mContext;
-	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer;
+	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer;
 
 	public ContextManager(Context mContext) {
 		super();
@@ -79,6 +80,15 @@ public class ContextManager {
 
 		}
 		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_BLUETOOTH){
+
+			ContextMonitor.getInstance(mContext).initiateBluetoothServices(pollingTime);
+			bluetoothTimer = new Timer("BLUETOOTH_TIMER");
+			eventsTimer.schedule(bluetoothUpdateTask, 0, minimumUpdateTime);
+
+		}
+		
+		
 
 	}
 
@@ -109,6 +119,11 @@ public class ContextManager {
 			eventsTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopCalendarServices();
 
+		}
+		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_BLUETOOTH){
+			bluetoothTimer.cancel();
+			ContextMonitor.getInstance(mContext).stopBluetoothServices();
 		}
 	}
 
@@ -206,6 +221,23 @@ public class ContextManager {
 		}
 	};
 
+	TimerTask bluetoothUpdateTask = new TimerTask() {
+
+		@Override
+		public void run() {
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					BluetoothInfo.sendBroadcast(mContext);
+					
+				}
+			});	
+		}
+	};
+	
 	public static DeviceInfo getPhoneInformation(){
 		return new DeviceInfo();
 	}

@@ -25,7 +25,12 @@ public class LocationsHelper {
 			// A new location is always better than no location
 			return true;
 		}
-
+		
+		if (location == null) {
+			// A new location is always better than no location
+			return false;
+		}
+		
 		// Check whether the new location fix is newer or older
 		long timeDelta = location.getTime() - currentBestLocation.getTime();
 		boolean isSignificantlyNewer = timeDelta > Constants.MAXIMUM_ACCEPTABLE_TIME;

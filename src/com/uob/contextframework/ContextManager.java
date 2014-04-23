@@ -33,6 +33,7 @@ import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.DeviceInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.LocationInfo;
+import com.uob.contextframework.baseclasses.PhoneProfile;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.WiFiInfo;
 import com.uob.contextframework.support.Constants;
@@ -45,7 +46,7 @@ import com.uob.contextframework.support.ContextManagerServices;
 public class ContextManager {
 
 	private Context mContext;
-	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer;
+	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer, phoneProfileTimer;
 
 
 	/**
@@ -112,8 +113,15 @@ public class ContextManager {
 			if(mService == ContextManagerServices.CTX_FRAMEWORK_BLUETOOTH){
 				ContextMonitor.getInstance(mContext).initiateBluetoothServices(pollingTime);
 				bluetoothTimer = new Timer("BLUETOOTH_TIMER");
-				eventsTimer.schedule(bluetoothUpdateTask, 0, minimumUpdateTime);
+				bluetoothTimer.schedule(bluetoothUpdateTask, 0, minimumUpdateTime);
 			}
+			
+			if(mService == ContextManagerServices.CTX_FRAMEWORK_PHONE_SETTINGS){
+				ContextMonitor.getInstance(mContext).initiatePhoneProfileServices(pollingTime);
+				phoneProfileTimer = new Timer("PHONE_PROFILE_TIMER");
+				phoneProfileTimer.schedule(phoneProfileUpdateTask, 0, minimumUpdateTime);
+			}
+			
 		}else{
 			throw new Exception("Requires permission to monitor this context.");
 		}
@@ -158,6 +166,12 @@ public class ContextManager {
 			bluetoothTimer.cancel();
 			ContextMonitor.getInstance(mContext).stopBluetoothServices();
 		}
+		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_PHONE_SETTINGS){
+			phoneProfileTimer.cancel();
+			ContextMonitor.getInstance(mContext).stopPhoneProfileServices();
+		}
+		
 	}
 
 
@@ -295,6 +309,31 @@ public class ContextManager {
 			});	
 		}
 	};
+	
+	/**
+	 * Phone setting information broadcasting task.
+	 * Type : PHONE_PROFILE_NOTIFY
+	 */
+	private TimerTask phoneProfileUpdateTask = new TimerTask() {
+
+		@Override
+		public void run() {
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					Intent intent = new Intent(Constants.PHONE_PROFILE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
+					intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	new PhoneProfile(mContext).toString());
+					mContext.sendBroadcast(intent);
+
+				}
+			});	
+		}
+	};
+	
 
 	/**
 	 * Provides information about the device in the form of a @{DeviceInfo} object.

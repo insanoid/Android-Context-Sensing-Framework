@@ -43,6 +43,7 @@ import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.NetworkConnectionStatus;
+import com.uob.contextframework.baseclasses.PhoneProfile;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.SignalInfoModel;
 import com.uob.contextframework.baseclasses.WiFiInfo;
@@ -66,6 +67,7 @@ public class ContextMonitor {
 	private Timer wifiMonitorTimer;
 	private Timer calendarMonitorTimer;
 	private Timer bluetoothMonitorTimer;
+	private Timer phoneProfileMonitorTimer;
 
 	//Location Context variables.
 	private Location bestAvailableLocation;
@@ -96,6 +98,9 @@ public class ContextMonitor {
 	Boolean isBluetoothAvailable;
 	BluetoothInfo bluetoothInfoBroadcastListner;
 
+	//Phone profile information.
+	private PhoneProfile currentPhoneProfile;
+	
 	/**
 	 * Destroy connections if needed.
 	 */
@@ -269,6 +274,26 @@ public class ContextMonitor {
 		bluetoothMonitorTimer.cancel();
 	}
 
+	
+
+	//Phone Profile Monitoring.
+	/**
+	 * Initiates phone's profile monitoring service
+	 * @param pollingTime
+	 */
+	public void initiatePhoneProfileServices(long pollingTime) {
+
+		phoneProfileMonitorTimer = new Timer("PHONE_PROFILE_POLLER");
+		phoneProfileMonitorTimer.schedule(phoneProfileTask, 0, pollingTime>0?pollingTime:Constants.GRANULAR_POLLING_INTERVAL);
+	}
+
+	/**
+	 * Stops phone's profile monitoring.
+	 */
+	public void stopPhoneProfileServices(){
+		currentPhoneProfile = null;
+		phoneProfileMonitorTimer.cancel();
+	}
 
 
 	private TimerTask wifiScannerTask = new TimerTask() {
@@ -314,6 +339,22 @@ public class ContextMonitor {
 			mContext.registerReceiver(bluetoothInfoBroadcastListner, intentFound);
 			mContext.registerReceiver(bluetoothInfoBroadcastListner, itentfinished);
 			bluetoothAdapter.startDiscovery();
+		}
+	};
+	
+	private TimerTask phoneProfileTask = new TimerTask() {
+		@Override
+		public void run() {
+			PhoneProfile newPhoneProfile = new PhoneProfile(mContext);
+			if(currentPhoneProfile.hasProfileChanged(newPhoneProfile)==true){
+				currentPhoneProfile = newPhoneProfile;
+				
+				Intent intent = new Intent(Constants.PHONE_PROFILE_NOTIFY);
+				intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
+				intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	currentPhoneProfile.toString());
+				mContext.sendBroadcast(intent);
+				
+			}
 		}
 	};
 

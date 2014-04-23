@@ -32,6 +32,8 @@ public class Constants {
 		public static long SHORT_POLLING_INTERVAL =  15*60*1000L; 
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
 		public static final long LONG_POLLING_INTERVAL = 30*60*1000L;
+		public static final long GRANULAR_POLLING_INTERVAL = 10*1000L;
+		
 		
 		public static String TAG = "CONTEXT_FRAMEWORK";
 		
@@ -66,6 +68,11 @@ public class Constants {
 		public static String IS_BLUETOOH_ON = "BLUETOOTH_ON";
 		public static String BLUETOOH_DEVICES = "BLUETOOTH_DEVICE";
 		
+
+		public static String RING_VOL = "RING_VOLUME";
+		public static String NORM_VOL = "NORMAL_VOLUME";
+		public static String SCREEN_BRIGHTNESS = "SCREEN_BRIGHTNESS";
+		public static String RINGER_MODE = "RINGER_MODE";
 		
 		// Intent Tags
 		
@@ -78,4 +85,5 @@ public class Constants {
 		public static String WIFI_NOTIFY = "WIFI_UPDATE_NOTIFY";
 		public static String EVENT_NOTIFY = "EVENT_UPDATE_NOTIFY";
 		public static String BLUETOOTH_NOTIFY = "BLUETOOTH_UPDATE_NOTIFY";
+		public static String PHONE_PROFILE_NOTIFY = "PHONE_PROFILE_NOTIFY";
 }

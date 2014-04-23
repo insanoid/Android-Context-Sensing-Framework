@@ -1,5 +1,4 @@
-# Context Sensing Framework For Android
-===
+# Android Context Sensing Framework 
 
 A simple context monitoring framework to handle context sensing and polling of contextual information.
 
@@ -38,14 +37,11 @@ To stop monitoring a particular context:
 		mContextManager.stopMonitoringContext(ContextManagerServices.CTX_FRAMEWORK_LOCATION);
 
 ### TODO
-===
 	- Monitor more contextual information (Application usage monitoring).
 	- Adaptive sensing
 	- Energy effective sensing (modify itself based on power levels)
 
 ### License
-===
-
 Copyright (c) 2014, University of Birmingham
 Karthikeya Udupa, kxu356@bham.ac.uk
 

@@ -1,8 +1,24 @@
+/* **************************************************
+Copyright (c) 2014, University of Birmingham
+Karthikeya Udupa, kxu356@bham.ac.uk
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ ************************************************** */
+
 package com.uob.contextframework;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -34,44 +50,48 @@ import com.uob.contextframework.baseclasses.WifiAccessPointModel;
 import com.uob.contextframework.support.CalendarService;
 import com.uob.contextframework.support.Constants;
 
+/**
+ * @author karthikeyaudupa
+ * Singleton monitor responsible for maintaining polling tasks and broadcast receivers.
+ */
 public class ContextMonitor {
 
 	//Class Properties.
 	private static ContextMonitor mInstance = null;
 	private Context mContext;
 
-	//Timers.
+	//Timers to perform polling tasks.
 	private Timer locationMonitoringTimer;
 	private Timer dataConnectionStateMonitorTimer;
 	private Timer wifiMonitorTimer;
 	private Timer calendarMonitorTimer;
 	private Timer bluetoothMonitorTimer;
 
-	//Location Context
+	//Location Context variables.
 	private Location bestAvailableLocation;
 	private String locationNetworkProvider;
 
-	// Battery Context
+	// Battery Context variables.
 	BatteryInfo batteryInfo;
 	private Boolean deviceCharging = false; 
 	private BatteryChargeType currentChargingSource = BatteryChargeType.BATTERY_PLUGGED_AC;
 	private float batteryLevel = 0;
 
-	// Signal Info.
+	// Signal Info variables.
 	public SignalInfoModel signalInfo;
 	public SignalInfo singalInfoReceiver;
 
-	//WiFi Info.
+	//WiFi Info variables.
 	private ArrayList<WifiAccessPointModel> accessPoints;
 	private WiFiInfo wifiBroadcastListner;
 
-	//Network Info.
+	//Network Info variables.
 	private NetworkConnectionStatus networkConnectionStatus;
 
-	//Calendar Info.
+	//Calendar Info variables.
 	List<Event> userCurrentEventList;
 
-	//Bluetooth Device Info.
+	//Bluetooth Device Info variables.
 	List<BluetoothInfo> nearbyBluetoothAccessPoints;
 	Boolean isBluetoothAvailable;
 	BluetoothInfo bluetoothInfoBroadcastListner;
@@ -96,6 +116,10 @@ public class ContextMonitor {
 		return mInstance;
 	}
 
+	/**
+	 * Constructor.
+	 * @param context context to initialize the object.
+	 */
 	private ContextMonitor(Context context){
 
 		mContext = context;
@@ -104,7 +128,7 @@ public class ContextMonitor {
 		h.post(new Runnable() {
 			@Override
 			public void run() {
-
+				//additional task which require runnable.s
 			}
 		});	
 
@@ -112,6 +136,14 @@ public class ContextMonitor {
 
 	}
 
+
+
+	//Location Monitoring.
+	/**
+	 * Initialize the polling of location service.
+	 * @param pollingTime defines the interval after information should be polled.
+	 * @param flags defines other parameters, currently object at index <i>0</i> represents the provider to use if the value is 1 GPS is used else network.
+	 */
 	public void initiateLocationServices(long pollingTime, ArrayList<Integer> flags) {
 
 		locationNetworkProvider = LocationManager.NETWORK_PROVIDER;
@@ -122,13 +154,21 @@ public class ContextMonitor {
 		}
 		bestAvailableLocation = new Location(LocationManager.NETWORK_PROVIDER);
 		locationMonitoringTimer = new Timer("LONG_TERM_POLLER");
-		locationMonitoringTimer.schedule(longTermTasks, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
+		locationMonitoringTimer.schedule(locationTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
 
+	/**
+	 * Stops the monitoring task for location.
+	 */
 	public void stopLocationServices(){
 		locationMonitoringTimer.cancel();
 	}
 
+
+	//Power Monitoring
+	/**
+	 * Triggers the monitoring of the battery services.
+	 */
 	public void initiateBatteryServices() {
 		batteryInfo = new BatteryInfo(mContext);
 		IntentFilter batteryLevelFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
@@ -136,26 +176,43 @@ public class ContextMonitor {
 		batteryInfo.pushBroadcast();
 	}
 
+	/**
+	 * Stop monitoring battery 
+	 */
 	public void stopBatteryServices(){
 		mContext.unregisterReceiver(batteryInfo);
 		batteryInfo = null;
 	}
 
+
+	//Signal Monitoring.
+	/**
+	 * Triggers monitoring of network signals and telephone state.
+	 * @param pollingTime initerval for polling state monitoring.
+	 */
 	@SuppressLint("NewApi")
 	public void initiateSignalServices(long pollingTime) {
 		signalInfo = new SignalInfoModel();
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
-		dataConnectionStateMonitorTimer.schedule(minuteDataTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
+		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 		signalInfo.setNearByCells(Tel.getAllCellInfo());
 		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
-
+	
+	/*
+	 * Stops monitoring signals.
+	 */
 	public void stopSignalServices(){
 		dataConnectionStateMonitorTimer.cancel();
 	}
 
+	//WiFi Access Points Monitoring.
+	/**
+	 * Triggers WiFi Monitoring.
+	 * @param pollingTime the time between the forced scan for WiFi access points.
+	 */
 	public void initiateWiFiServices(long pollingTime) {
 		networkConnectionStatus = new NetworkConnectionStatus();
 		wifiBroadcastListner = new WiFiInfo(mContext);
@@ -164,23 +221,38 @@ public class ContextMonitor {
 		wifiMonitorTimer.schedule(wifiScannerTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
 
+	/**
+	 * Stop WiFi monitoring.
+	 */
 	public void stopWiFiServices(){
 		mContext.unregisterReceiver(wifiBroadcastListner);
 		wifiBroadcastListner = null;
 	}
 
+	//Calendar Monitoring.
+	/**
+	 * Triggers calendar monitoring service.
+	 * @param pollingTime
+	 */
 	public void initiateCalendarServices(long pollingTime) {
-
 		userCurrentEventList = new ArrayList<Event>();
 		calendarMonitorTimer = new Timer("CALENDAR_POLLER");
 		calendarMonitorTimer.schedule(calendarTask, 0, pollingTime>0?pollingTime:Constants.LONG_POLLING_INTERVAL);
 	}
 
+	/**
+	 * Stops monitioring calendar.
+	 */
 	public void stopCalendarServices(){
 		userCurrentEventList = new ArrayList<Event>();
 		calendarMonitorTimer.cancel();
 	}
-	
+
+	//Bluetooth Monitoring.
+	/**
+	 * Initiates bluetooth monitoring service
+	 * @param pollingTime
+	 */
 	public void initiateBluetoothServices(long pollingTime) {
 
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
@@ -189,11 +261,14 @@ public class ContextMonitor {
 		bluetoothMonitorTimer.schedule(bluetoothTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
 
+	/**
+	 * Stops bluetooth monitoring.
+	 */
 	public void stopBluetoothServices(){
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
 		bluetoothMonitorTimer.cancel();
 	}
-	
+
 
 
 	private TimerTask wifiScannerTask = new TimerTask() {
@@ -215,14 +290,14 @@ public class ContextMonitor {
 		}
 	};
 
-	private TimerTask minuteDataTask = new TimerTask() {
+	private TimerTask dataConnectivityTask = new TimerTask() {
 		@Override
 		public void run() {
 			int dataConnType = signalInfo.getDataConnectionState();
 			updateDataState();
 			if(dataConnType!=signalInfo.getDataConnectionState()){
 				Intent intent = new Intent(Constants.SIGNAL_NOTIFY);
-				intent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
+				intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
 				intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
 				mContext.sendBroadcast(intent);
 			}
@@ -243,6 +318,9 @@ public class ContextMonitor {
 	};
 
 
+	/**
+	 * Function to update the present state of data connectivity.
+	 */
 	void updateDataState(){
 		TelephonyManager tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 		signalInfo.setDataConnectionState(tel.getDataState());
@@ -251,7 +329,7 @@ public class ContextMonitor {
 	/**
 	 * Monitors long term polling tasks (set by polling interval)
 	 */
-	private TimerTask longTermTasks = new TimerTask() {
+	private TimerTask locationTask = new TimerTask() {
 		@Override
 		public void run() {
 

@@ -1,3 +1,20 @@
+/* **************************************************
+Copyright (c) 2014, University of Birmingham
+Karthikeya Udupa, kxu356@bham.ac.uk
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
+IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ ************************************************** */
+
 package com.uob.contextframework.baseclasses;
 
 import org.json.JSONException;
@@ -12,14 +29,17 @@ import android.os.BatteryManager;
 
 import com.uob.contextframework.ContextMonitor;
 import com.uob.contextframework.support.Constants;
-
+/**
+ * @author karthikeyaudupa
+ * Stores and handles battery intents.
+ */
+@SuppressLint("InlinedApi")
 public class BatteryInfo extends BroadcastReceiver {
 
-	Context mContext;
-
-	Boolean isCharging;
-	BatteryChargeType currentChargingSource;
-	float batteryPercentage;
+	private Context mContext;
+	private Boolean isCharging;
+	private BatteryChargeType currentChargingSource;
+	private float batteryPercentage;
 
 
 	/**
@@ -28,15 +48,15 @@ public class BatteryInfo extends BroadcastReceiver {
 	 */
 	public BatteryInfo(Context _ctx){
 		mContext = _ctx;
-
 		batteryPercentage = ContextMonitor.getInstance(mContext).getBatteryLevel();
 		currentChargingSource = ContextMonitor.getInstance(mContext).getCurrentChargingSource();
 		isCharging = ContextMonitor.getInstance(mContext).getDeviceCharging();
 
 	}
 
-	/*
-	 * To poll battery levels.
+	/**
+	 * Provides the battery level.
+	 * @return battery value.
 	 */
 	public float getBatteryLevel() {
 
@@ -50,29 +70,11 @@ public class BatteryInfo extends BroadcastReceiver {
 		return ((float)level / (float)scale) * 100.0f; 
 	}
 
-
-	@Override
-	public String toString() {
-
-		return toJSON().toString();
-	}
-
-	public JSONObject toJSON() {
-
-		JSONObject jObject = new JSONObject();
-		try {
-			jObject.put(Constants.IS_CHARGING, isCharging);
-			jObject.put(Constants.CHARGING_SRC, String.valueOf(currentChargingSource));
-			jObject.put(Constants.BATTERY_PCTG, String.valueOf(batteryPercentage));
-
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-
-		return jObject;
-	}
-
-	@SuppressLint("InlinedApi")
+	/*
+	 * Battery information reciever.
+	 * (non-Javadoc)
+	 * @see android.content.BroadcastReceiver#onReceive(android.content.Context, android.content.Intent)
+	 */
 	@Override
 	public void onReceive(Context context, Intent intent) {
 
@@ -140,10 +142,38 @@ public class BatteryInfo extends BroadcastReceiver {
 			pushBroadcast();
 		}
 	}
+
+	/**
+	 * Pushes latest battery information as broadcast.
+	 */
 	public void pushBroadcast(){
 		Intent proxIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 		proxIntent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
 		proxIntent.putExtra(Constants.BATTERY_NOTIFY,toString());
 		mContext.sendBroadcast(proxIntent);
 	}
+
+
+	//Data conversion methods.
+	@Override
+	public String toString() {
+
+		return toJSON().toString();
+	}
+
+	public JSONObject toJSON() {
+
+		JSONObject jObject = new JSONObject();
+		try {
+			jObject.put(Constants.IS_CHARGING, isCharging);
+			jObject.put(Constants.CHARGING_SRC, String.valueOf(currentChargingSource));
+			jObject.put(Constants.BATTERY_PCTG, String.valueOf(batteryPercentage));
+
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+
+		return jObject;
+	}
+
 }

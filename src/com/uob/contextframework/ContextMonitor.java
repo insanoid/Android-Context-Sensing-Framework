@@ -185,7 +185,10 @@ public class ContextMonitor {
 	 * Stop monitoring battery 
 	 */
 	public void stopBatteryServices(){
-		mContext.unregisterReceiver(batteryInfo);
+		
+		if(batteryInfo!=null){
+			mContext.unregisterReceiver(batteryInfo);
+		}
 		batteryInfo = null;
 	}
 
@@ -202,7 +205,11 @@ public class ContextMonitor {
 		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		try{
 		signalInfo.setNearByCells(Tel.getAllCellInfo());
+		}catch(Exception e){
+			
+		}
 		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
 	

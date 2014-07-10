@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
+import android.util.Log;
 
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.BluetoothInfo;
@@ -137,38 +138,62 @@ public class ContextManager {
 	public void stopMonitoringContext(ContextManagerServices mService){
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_LOCATION){
-			locationTimer.cancel();
+			if(locationTimer!=null){
+				locationTimer.cancel();
+				locationTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopLocationServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_BATTERY){
-			batteryTimer.cancel();
+			if(batteryTimer!=null){
+				Log.d("------>","Stop was needed");
+				batteryTimer.cancel();
+				batteryTimer = null;
+			}else{
+				Log.d("------>","Stop was not needed");
+			}
 			ContextMonitor.getInstance(mContext).stopBatteryServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_SIGNALS){
-			signalTimer.cancel();
+			if(signalTimer!=null){
+				signalTimer.cancel();
+				batteryTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopSignalServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_WIFI){
-			wifiTimer.cancel();
+			if(wifiTimer!=null){
+				wifiTimer.cancel();
+				wifiTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopWiFiServices();
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_EVENTS){
-			eventsTimer.cancel();
+			if(eventsTimer!=null){
+				eventsTimer.cancel();
+				eventsTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopCalendarServices();
 
 		}
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_BLUETOOTH){
-			bluetoothTimer.cancel();
+			if(bluetoothTimer!=null){
+				bluetoothTimer.cancel();
+				bluetoothTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopBluetoothServices();
 		}
 		
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_PHONE_SETTINGS){
-			phoneProfileTimer.cancel();
+			if(phoneProfileTimer!=null){
+				phoneProfileTimer.cancel();
+				phoneProfileTimer = null;
+			}
 			ContextMonitor.getInstance(mContext).stopPhoneProfileServices();
 		}
 		
@@ -205,6 +230,7 @@ public class ContextManager {
 			h.post(new Runnable() {
 				@Override
 				public void run() {
+					Log.d("----->>>>","From timer?!");
 					BatteryInfo batteryInfo = new BatteryInfo(mContext);
 					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 					intent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);

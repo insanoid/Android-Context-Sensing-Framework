@@ -85,7 +85,8 @@ public class WifiAccessPointModel {
 	 * @return
 	 */
 	public boolean isEqualTo(WifiAccessPointModel wifiNode){
-		if(wifiNode.getNetworkName().equalsIgnoreCase(getNetworkName()) && wifiNode.getAddress().equalsIgnoreCase(getAddress())) {
+		// && wifiNode.getAddress().equalsIgnoreCase(getAddress())
+		if(wifiNode.getNetworkName().equalsIgnoreCase(getNetworkName())) {
 			return true;
 		}
 		return false;

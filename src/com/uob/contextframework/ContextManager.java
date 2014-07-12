@@ -27,7 +27,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
-import android.util.Log;
 
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.BluetoothInfo;
@@ -147,12 +146,10 @@ public class ContextManager {
 
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_BATTERY){
 			if(batteryTimer!=null){
-				Log.d("------>","Stop was needed");
 				batteryTimer.cancel();
 				batteryTimer = null;
-			}else{
-				Log.d("------>","Stop was not needed");
 			}
+			
 			ContextMonitor.getInstance(mContext).stopBatteryServices();
 		}
 
@@ -230,7 +227,6 @@ public class ContextManager {
 			h.post(new Runnable() {
 				@Override
 				public void run() {
-					Log.d("----->>>>","From timer?!");
 					BatteryInfo batteryInfo = new BatteryInfo(mContext);
 					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 					intent.putExtra(Constants.INTENT_TYPE, Constants.BATTERY_NOTIFY);
@@ -350,7 +346,7 @@ public class ContextManager {
 			h.post(new Runnable() {
 				@Override
 				public void run() {
-					Intent intent = new Intent(Constants.PHONE_PROFILE_NOTIFY);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 					intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
 					intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	new PhoneProfile(mContext).toString());
 					mContext.sendBroadcast(intent);

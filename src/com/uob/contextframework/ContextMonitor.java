@@ -270,7 +270,7 @@ public class ContextMonitor {
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
 		bluetoothMonitorTimer = new Timer("BLUETOOTH_POLLER");
 		isBluetoothAvailable = false;
-		bluetoothMonitorTimer.schedule(bluetoothTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
+		bluetoothMonitorTimer.schedule(bluetoothTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 	}
 
 	/**
@@ -278,7 +278,10 @@ public class ContextMonitor {
 	 */
 	public void stopBluetoothServices(){
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
-		bluetoothMonitorTimer.cancel();
+		if(bluetoothMonitorTimer!=null){
+			bluetoothMonitorTimer.cancel();
+			bluetoothMonitorTimer = null;
+		}
 	}
 
 	
@@ -290,6 +293,7 @@ public class ContextMonitor {
 	 */
 	public void initiatePhoneProfileServices(long pollingTime) {
 
+		stopPhoneProfileServices();
 		phoneProfileMonitorTimer = new Timer("PHONE_PROFILE_POLLER");
 		phoneProfileMonitorTimer.schedule(phoneProfileTask, 0, pollingTime>0?pollingTime:Constants.GRANULAR_POLLING_INTERVAL);
 	}
@@ -299,7 +303,10 @@ public class ContextMonitor {
 	 */
 	public void stopPhoneProfileServices(){
 		currentPhoneProfile = null;
-		phoneProfileMonitorTimer.cancel();
+		if(phoneProfileMonitorTimer!=null){
+			phoneProfileMonitorTimer.cancel();
+			phoneProfileMonitorTimer = null;
+		}
 	}
 
 
@@ -328,7 +335,7 @@ public class ContextMonitor {
 			int dataConnType = signalInfo.getDataConnectionState();
 			updateDataState();
 			if(dataConnType!=signalInfo.getDataConnectionState()){
-				Intent intent = new Intent(Constants.SIGNAL_NOTIFY);
+				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 				intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
 				intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
 				mContext.sendBroadcast(intent);
@@ -353,14 +360,20 @@ public class ContextMonitor {
 		@Override
 		public void run() {
 			PhoneProfile newPhoneProfile = new PhoneProfile(mContext);
-			if(currentPhoneProfile.hasProfileChanged(newPhoneProfile)==true){
+			if(currentPhoneProfile!=null){
+				if(currentPhoneProfile.hasProfileChanged(newPhoneProfile)==true){
+					currentPhoneProfile = newPhoneProfile;
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+					intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
+					intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	currentPhoneProfile.toString());
+					mContext.sendBroadcast(intent);
+				}
+			}else{
 				currentPhoneProfile = newPhoneProfile;
-				
-				Intent intent = new Intent(Constants.PHONE_PROFILE_NOTIFY);
+				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 				intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
 				intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	currentPhoneProfile.toString());
 				mContext.sendBroadcast(intent);
-				
 			}
 		}
 	};

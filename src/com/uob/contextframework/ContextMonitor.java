@@ -81,7 +81,7 @@ public class ContextMonitor {
 
 	// Signal Info variables.
 	public SignalInfoModel signalInfo;
-	public SignalInfo singalInfoReceiver;
+	public SignalInfo signalInfoReceiver;
 
 	//WiFi Info variables.
 	private ArrayList<WifiAccessPointModel> accessPoints;
@@ -204,7 +204,7 @@ public class ContextMonitor {
 	public void initiateSignalServices(long pollingTime) {
 		
 		stopSignalServices();
-		singalInfoReceiver = new SignalInfo(mContext);
+		signalInfoReceiver = new SignalInfo(mContext);
 		signalInfo = new SignalInfoModel();
 		
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
@@ -217,11 +217,11 @@ public class ContextMonitor {
 		}catch(Exception e){
 		}
 		
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_CELL_INFO);
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_DATA_ACTIVITY);
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_CELL_LOCATION);
+		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_CELL_INFO);
+		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
+		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_DATA_ACTIVITY);
+		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_CELL_LOCATION);
 		
 		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
@@ -234,10 +234,10 @@ public class ContextMonitor {
 			dataConnectionStateMonitorTimer.cancel();
 		}
 		
-		if(singalInfoReceiver!=null){
+		if(signalInfoReceiver!=null){
 			TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-			Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_NONE);
-			singalInfoReceiver=null;
+			Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_NONE);
+			signalInfoReceiver=null;
 		}
 		
 		dataConnectionStateMonitorTimer=null;

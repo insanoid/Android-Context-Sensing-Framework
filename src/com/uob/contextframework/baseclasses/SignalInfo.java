@@ -26,6 +26,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.telephony.CellInfo;
+import android.telephony.CellLocation;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 
@@ -48,13 +49,19 @@ public class SignalInfo  extends PhoneStateListener {
 		connStatus = ContextMonitor.getInstance(_ctx).getNetworkConnectionStatus();
 	}
 
-	
 
+	@Override
+	public void onCellLocationChanged(CellLocation location) {
+		ContextMonitor.getInstance(mContext).signalInfo.setCellLocation(location);
+		super.onCellLocationChanged(location);
+	}
 
 	@SuppressLint("NewApi")
 	public void  onCellInfoChanged (List<CellInfo> cellInfo){
+		
 		super.onCellInfoChanged(cellInfo);
-		ContextMonitor.getInstance(mContext).signalInfo.setNearByCells(cellInfo);
+		if(cellInfo!=null)
+			ContextMonitor.getInstance(mContext).signalInfo.setNearByCells(cellInfo);
 		
 		
 		Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
@@ -66,6 +73,7 @@ public class SignalInfo  extends PhoneStateListener {
 
 	@Override
 	public void onSignalStrengthsChanged(SignalStrength signalStrength) {
+		
 		super.onSignalStrengthsChanged(signalStrength);
 		int gsmSingalStrength  = signalStrength.getGsmSignalStrength();
 		ContextMonitor.getInstance(mContext).signalInfo.setGsmSignalStrength(gsmSingalStrength);
@@ -77,8 +85,7 @@ public class SignalInfo  extends PhoneStateListener {
 
 	}
 
-
-	//TODO: Never gets called.
+		
 	@Override
 	public void onDataConnectionStateChanged(int state) {
 		super.onDataConnectionStateChanged(state);
@@ -103,14 +110,26 @@ public class SignalInfo  extends PhoneStateListener {
 
 		JSONObject jObject = new JSONObject();
 		try {
+			
 			if(signalInfoModel==null){
 
 				return jObject;
 			}
-			jObject.put(Constants.CONN_INFO, connStatus.toJSON());
+			
+			if(connStatus!=null){
+				jObject.put(Constants.CONN_INFO, connStatus.toJSON());
+			}else{
+				jObject.put(Constants.CONN_INFO, null);
+			}
+			
+			if(signalInfoModel.cellLocation!=null){
+				jObject.put(Constants.CELL_LOCATION, String.valueOf(signalInfoModel.getCellLocation()));
+			}
+		
 			jObject.put(Constants.DATA_CONNECTION_STATE, String.valueOf(signalInfoModel.getDataConnectionState()));
 			jObject.put(Constants.GSM_SIGNAL, String.valueOf((signalInfoModel.getGsmSignalStrength()>0)?signalInfoModel.getGsmSignalStrength():0));
 			jObject.put(Constants.NEAR_BY_CELLS, String.valueOf(signalInfoModel.getNearByCells()));
+		
 		} catch (JSONException e) {
 			
 			e.printStackTrace();

@@ -52,7 +52,7 @@ public class Constants {
 		public static String DATA_CONNECTION_STATE = "CONNECTION_STATE";
 		public static String GSM_SIGNAL = "GSM_SIGNAL_STRENGTH";
 		public static String NEAR_BY_CELLS = "CELl_TOWERS_NEARBY";
-
+		public static String CELL_LOCATION = "CELL_LOCATION";
 
 		public static String ACCESSPOINT_COUNT = "ACCESSPOINT_COUNT";
 		public static String ACCESSPOINT = "ACCESSPOINT";

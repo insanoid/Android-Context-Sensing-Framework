@@ -251,10 +251,12 @@ public class ContextManager {
 				@Override
 				public void run() {
 					SignalInfo signalInfo = new SignalInfo(mContext);
-					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-					intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
-					intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
-					mContext.sendBroadcast(intent);
+					if(signalInfo!=null){
+						Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+						intent.putExtra(Constants.INTENT_TYPE, Constants.SIGNAL_NOTIFY);
+						intent.putExtra(Constants.SIGNAL_NOTIFY,signalInfo.toString());
+						mContext.sendBroadcast(intent);
+					}
 				}
 			});	
 		}

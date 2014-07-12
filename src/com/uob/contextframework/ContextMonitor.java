@@ -175,6 +175,8 @@ public class ContextMonitor {
 	 * Triggers the monitoring of the battery services.
 	 */
 	public void initiateBatteryServices() {
+		stopBatteryServices();
+		
 		batteryInfo = new BatteryInfo(mContext);
 		IntentFilter batteryLevelFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		mContext.registerReceiver(batteryInfo, batteryLevelFilter);
@@ -200,16 +202,27 @@ public class ContextMonitor {
 	 */
 	@SuppressLint("NewApi")
 	public void initiateSignalServices(long pollingTime) {
+		
+		stopSignalServices();
+		singalInfoReceiver = new SignalInfo(mContext);
 		signalInfo = new SignalInfoModel();
+		
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
-		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
+		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.GRANULAR_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		
+
 		try{
-		signalInfo.setNearByCells(Tel.getAllCellInfo());
+			signalInfo.setNearByCells(Tel.getAllCellInfo());
 		}catch(Exception e){
-			
 		}
+		
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_CELL_INFO);
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_DATA_ACTIVITY);
+		Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_CELL_LOCATION);
+		
 		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
 	
@@ -217,7 +230,17 @@ public class ContextMonitor {
 	 * Stops monitoring signals.
 	 */
 	public void stopSignalServices(){
-		dataConnectionStateMonitorTimer.cancel();
+		if(dataConnectionStateMonitorTimer!=null){
+			dataConnectionStateMonitorTimer.cancel();
+		}
+		
+		if(singalInfoReceiver!=null){
+			TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
+			Tel.listen(singalInfoReceiver, PhoneStateListener.LISTEN_NONE);
+			singalInfoReceiver=null;
+		}
+		
+		dataConnectionStateMonitorTimer=null;
 	}
 
 	//WiFi Access Points Monitoring.
@@ -266,7 +289,8 @@ public class ContextMonitor {
 	 * @param pollingTime
 	 */
 	public void initiateBluetoothServices(long pollingTime) {
-
+		stopBluetoothServices();
+		
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
 		bluetoothMonitorTimer = new Timer("BLUETOOTH_POLLER");
 		isBluetoothAvailable = false;
@@ -283,8 +307,6 @@ public class ContextMonitor {
 			bluetoothMonitorTimer = null;
 		}
 	}
-
-	
 
 	//Phone Profile Monitoring.
 	/**
@@ -333,6 +355,7 @@ public class ContextMonitor {
 		@Override
 		public void run() {
 			int dataConnType = signalInfo.getDataConnectionState();
+			Log.e("CONTY",dataConnType+"");
 			updateDataState();
 			if(dataConnType!=signalInfo.getDataConnectionState()){
 				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);

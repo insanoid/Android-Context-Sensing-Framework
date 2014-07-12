@@ -20,6 +20,7 @@ package com.uob.contextframework.baseclasses;
 import java.util.List;
 
 import android.telephony.CellInfo;
+import android.telephony.CellLocation;
 
 /**
  * @author karthikeyaudupa
@@ -35,6 +36,8 @@ public class SignalInfoModel {
 	int dataConnectionState;
 	List<CellInfo> nearByCells;
 	int gsmSignalStrength;
+	CellLocation cellLocation;
+	
 	/**
 	 * @return the dataConnectionState
 	 */
@@ -70,6 +73,18 @@ public class SignalInfoModel {
 	 */
 	public void setGsmSignalStrength(int gsmSignalStrength) {
 		this.gsmSignalStrength = gsmSignalStrength;
+	}
+	/**
+	 * @return the cellLocation
+	 */
+	public CellLocation getCellLocation() {
+		return cellLocation;
+	}
+	/**
+	 * @param cellLocation the cellLocation to set
+	 */
+	public void setCellLocation(CellLocation cellLocation) {
+		this.cellLocation = cellLocation;
 	}
 	
 }

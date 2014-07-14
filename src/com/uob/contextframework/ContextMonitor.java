@@ -44,6 +44,7 @@ import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.NetworkConnectionStatus;
 import com.uob.contextframework.baseclasses.PhoneProfile;
+import com.uob.contextframework.baseclasses.ScreenStatusInfo;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.SignalInfoModel;
 import com.uob.contextframework.baseclasses.WiFiInfo;
@@ -100,7 +101,9 @@ public class ContextMonitor {
 
 	//Phone profile information.
 	private PhoneProfile currentPhoneProfile;
-	
+
+	private ScreenStatusInfo screenStatusInfo;
+
 	/**
 	 * Destroy connections if needed.
 	 */
@@ -177,7 +180,7 @@ public class ContextMonitor {
 	 */
 	public void initiateBatteryServices() {
 		stopBatteryServices();
-		
+
 		batteryInfo = new BatteryInfo(mContext);
 		IntentFilter batteryLevelFilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
 		mContext.registerReceiver(batteryInfo, batteryLevelFilter);
@@ -188,7 +191,7 @@ public class ContextMonitor {
 	 * Stop monitoring battery 
 	 */
 	public void stopBatteryServices(){
-		
+
 		if(batteryInfo!=null){
 			mContext.unregisterReceiver(batteryInfo);
 		}
@@ -203,30 +206,30 @@ public class ContextMonitor {
 	 */
 	@SuppressLint("NewApi")
 	public void initiateSignalServices(long pollingTime) {
-		
+
 		stopSignalServices();
 		signalInfoReceiver = new SignalInfo(mContext);
 		signalInfo = new SignalInfoModel();
-		
+
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
 		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
-		
+
 
 		try{
 			signalInfo.setNearByCells(Tel.getAllCellInfo());
 		}catch(Exception e){
 		}
-		
+
 		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_SIGNAL_STRENGTHS);
 		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_CELL_INFO);
 		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
 		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_DATA_ACTIVITY);
 		Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_CELL_LOCATION);
-		
+
 		signalInfo.setDataConnectionState(Tel.getDataState());
 	}
-	
+
 	/*
 	 * Stops monitoring signals.
 	 */
@@ -234,13 +237,13 @@ public class ContextMonitor {
 		if(dataConnectionStateMonitorTimer!=null){
 			dataConnectionStateMonitorTimer.cancel();
 		}
-		
+
 		if(signalInfoReceiver!=null){
 			TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 			Tel.listen(signalInfoReceiver, PhoneStateListener.LISTEN_NONE);
 			signalInfoReceiver=null;
 		}
-		
+
 		dataConnectionStateMonitorTimer=null;
 	}
 
@@ -291,7 +294,7 @@ public class ContextMonitor {
 	 */
 	public void initiateBluetoothServices(long pollingTime) {
 		stopBluetoothServices();
-		
+
 		nearbyBluetoothAccessPoints = new ArrayList<BluetoothInfo>();
 		bluetoothMonitorTimer = new Timer("BLUETOOTH_POLLER");
 		isBluetoothAvailable = false;
@@ -332,6 +335,37 @@ public class ContextMonitor {
 		}
 	}
 
+	//Screen Monitoring
+	/**
+	 * Triggers the monitoring of the screen monitoring services.
+	 */
+	public void initiateScreenMonitoringServices() {
+		stopScreenMonitoringServices();
+
+		screenStatusInfo = new ScreenStatusInfo(mContext);
+		final IntentFilter theFilter = new IntentFilter();
+		theFilter.addAction(Intent.ACTION_SCREEN_ON);
+		theFilter.addAction(Intent.ACTION_SCREEN_OFF);
+		mContext.getApplicationContext().registerReceiver(screenStatusInfo, theFilter);
+	}
+
+	/**
+	 * Stop monitoring battery 
+	 */
+	public void stopScreenMonitoringServices(){
+
+		if(screenStatusInfo!=null){
+			mContext.unregisterReceiver(screenStatusInfo);
+		}
+		screenStatusInfo = null;
+	}
+
+
+
+
+	/****
+	 * Functions to handle tasks.
+	 */
 
 	private TimerTask wifiScannerTask = new TimerTask() {
 		@Override
@@ -379,7 +413,7 @@ public class ContextMonitor {
 			bluetoothAdapter.startDiscovery();
 		}
 	};
-	
+
 	private TimerTask phoneProfileTask = new TimerTask() {
 		@Override
 		public void run() {
@@ -626,5 +660,19 @@ public class ContextMonitor {
 	 */
 	public void setIsBluetoothAvailable(Boolean isBluetoothAvailable) {
 		this.isBluetoothAvailable = isBluetoothAvailable;
+	}
+
+	/**
+	 * @return the screenStatusInfo
+	 */
+	public ScreenStatusInfo getScreenStatusInfo() {
+		return screenStatusInfo;
+	}
+
+	/**
+	 * @param screenStatusInfo the screenStatusInfo to set
+	 */
+	public void setScreenStatusInfo(ScreenStatusInfo screenStatusInfo) {
+		this.screenStatusInfo = screenStatusInfo;
 	}
 }

@@ -34,6 +34,7 @@ import com.uob.contextframework.baseclasses.DeviceInfo;
 import com.uob.contextframework.baseclasses.Event;
 import com.uob.contextframework.baseclasses.LocationInfo;
 import com.uob.contextframework.baseclasses.PhoneProfile;
+import com.uob.contextframework.baseclasses.ScreenStatusInfo;
 import com.uob.contextframework.baseclasses.SignalInfo;
 import com.uob.contextframework.baseclasses.WiFiInfo;
 import com.uob.contextframework.support.Constants;
@@ -46,7 +47,7 @@ import com.uob.contextframework.support.ContextManagerServices;
 public class ContextManager {
 
 	private Context mContext;
-	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer, phoneProfileTimer;
+	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer, phoneProfileTimer, screenStatusTimer;
 
 
 	/**
@@ -122,6 +123,12 @@ public class ContextManager {
 				phoneProfileTimer.schedule(phoneProfileUpdateTask, 0, minimumUpdateTime);
 			}
 			
+			if(mService == ContextManagerServices.CTX_FRAMEWORK_SCREEN_STATUS){
+				ContextMonitor.getInstance(mContext).initiateScreenMonitoringServices();
+				screenStatusTimer = new Timer("SCREEN_STATUS_TIMER");
+				screenStatusTimer.schedule(screenStatusUpdateTask, 0, minimumUpdateTime);
+			}
+			
 		}else{
 			throw new Exception("Requires permission to monitor this context.");
 		}
@@ -194,6 +201,13 @@ public class ContextManager {
 			ContextMonitor.getInstance(mContext).stopPhoneProfileServices();
 		}
 		
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_SCREEN_STATUS){
+			if(screenStatusTimer!=null){
+				screenStatusTimer.cancel();
+				screenStatusTimer = null;
+			}
+			ContextMonitor.getInstance(mContext).stopScreenMonitoringServices();
+		}
 	}
 
 
@@ -354,6 +368,28 @@ public class ContextManager {
 					intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
 					intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	new PhoneProfile(mContext).toString());
 					mContext.sendBroadcast(intent);
+
+				}
+			});	
+		}
+	};
+	
+	/**
+	 * Phone's screen status broadcasting task.
+	 * Type : SCREEN_STATUS_NOTIFY
+	 */
+	private TimerTask screenStatusUpdateTask = new TimerTask() {
+
+		@Override
+		public void run() {
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					ScreenStatusInfo screenStatusInfo = new ScreenStatusInfo(mContext);
+					screenStatusInfo.sendNotification(mContext);
 
 				}
 			});	

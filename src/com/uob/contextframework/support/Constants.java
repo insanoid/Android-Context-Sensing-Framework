@@ -75,6 +75,8 @@ public class Constants {
 		public static String SCREEN_BRIGHTNESS = "SCREEN_BRIGHTNESS";
 		public static String RINGER_MODE = "RINGER_MODE";
 		
+		public static String SCREEN_STATE = "SCREEN_STATE";
+		
 		// Intent Tags
 		
 		public static String CONTEXT_CHANGE_NOTIFY = "CONTEXT_CHANGE_NOTIFY";
@@ -87,4 +89,5 @@ public class Constants {
 		public static String EVENT_NOTIFY = "EVENT_UPDATE_NOTIFY";
 		public static String BLUETOOTH_NOTIFY = "BLUETOOTH_UPDATE_NOTIFY";
 		public static String PHONE_PROFILE_NOTIFY = "PHONE_PROFILE_NOTIFY";
+		public static String SCREEN_NOTIFY = "SCREEN_NOTIFY";
 }

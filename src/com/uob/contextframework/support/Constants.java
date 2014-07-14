@@ -29,10 +29,11 @@ public class Constants {
 		public static long MAXIMUM_ACCEPTABLE_DISTANCE = 0;
 		
 		
-		public static long SHORT_POLLING_INTERVAL =  15*60*1000L; 
-		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
-		public static final long LONG_POLLING_INTERVAL = 30*60*1000L;
 		public static final long GRANULAR_POLLING_INTERVAL = 10*1000L;
+		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
+		public static long SHORT_POLLING_INTERVAL =  15*60*1000L; 
+		public static final long LONG_POLLING_INTERVAL = 30*60*1000L;
+		
 		
 		
 		public static String TAG = "CONTEXT_FRAMEWORK";

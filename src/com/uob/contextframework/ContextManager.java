@@ -207,10 +207,12 @@ public class ContextManager {
 		public void run() {
 			LocationInfo locationInfo = new LocationInfo(mContext);
 			Location loc = locationInfo.getLocation();
+			if(loc!=null){
 			Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
 			intent.putExtra(Constants.INTENT_TYPE, Constants.LOC_NOTIFY);
 			intent.putExtra(Constants.LOC_NOTIFY,loc);
 			mContext.sendBroadcast(intent);
+			}
 		}
 	};
 

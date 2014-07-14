@@ -141,8 +141,6 @@ public class ContextMonitor {
 
 	}
 
-
-
 	//Location Monitoring.
 	/**
 	 * Initialize the polling of location service.
@@ -166,7 +164,10 @@ public class ContextMonitor {
 	 * Stops the monitoring task for location.
 	 */
 	public void stopLocationServices(){
-		locationMonitoringTimer.cancel();
+		if(locationMonitoringTimer!=null){
+			locationMonitoringTimer.cancel();
+			locationMonitoringTimer = null;
+		}
 	}
 
 
@@ -208,7 +209,7 @@ public class ContextMonitor {
 		signalInfo = new SignalInfoModel();
 		
 		dataConnectionStateMonitorTimer = new Timer("MINUTE_TERM_TIMER");
-		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.GRANULAR_POLLING_INTERVAL);
+		dataConnectionStateMonitorTimer.schedule(dataConnectivityTask, 0, pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
 		TelephonyManager Tel = (TelephonyManager)mContext.getSystemService(Context.TELEPHONY_SERVICE);
 		
 
@@ -317,7 +318,7 @@ public class ContextMonitor {
 
 		stopPhoneProfileServices();
 		phoneProfileMonitorTimer = new Timer("PHONE_PROFILE_POLLER");
-		phoneProfileMonitorTimer.schedule(phoneProfileTask, 0, pollingTime>0?pollingTime:Constants.GRANULAR_POLLING_INTERVAL);
+		phoneProfileMonitorTimer.schedule(phoneProfileTask, 0, pollingTime>0?pollingTime:Constants.SHORT_POLLING_INTERVAL);
 	}
 
 	/**
@@ -479,7 +480,7 @@ public class ContextMonitor {
 				});	
 
 			}else{
-
+				Log.e(Constants.TAG,"Location provider not enabled.");
 			}
 		}
 

@@ -43,13 +43,13 @@ public class Event {
 		startDate = 0L;
 		endDate = 0L;
 		location = "";
-		allDayEvent = false;
+		notAllDayEvent = false;
 
 	}
 
 	private long startDate, endDate;
 	private String location;
-	private boolean allDayEvent;
+	private boolean notAllDayEvent;
 	/**
 	 * @return the startDate
 	 */
@@ -78,13 +78,13 @@ public class Event {
 	 * @return the allDayEvent
 	 */
 	public boolean isAllDayEvent() {
-		return allDayEvent;
+		return notAllDayEvent;
 	}
 	/**
 	 * @param allDayEvent the allDayEvent to set
 	 */
 	public void setAllDayEvent(boolean allDayEvent) {
-		this.allDayEvent = allDayEvent;
+		this.notAllDayEvent = allDayEvent;
 	}
 	/**
 	 * @return the location
@@ -150,7 +150,7 @@ public class Event {
 		try {
 			jObj.put("START_DATE", String.valueOf(startDate));
 			jObj.put("END_DATE", String.valueOf(endDate));
-			jObj.put("ALL_DAY", String.valueOf(isAllDayEvent()));
+			jObj.put("ALL_DAY", String.valueOf(!isAllDayEvent()));
 			jObj.put("LOCATION", String.valueOf(location));
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block

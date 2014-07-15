@@ -32,10 +32,10 @@ public class Constants {
 		public static final long APP_POLLING_INTERVAL = 4*1000L;
 		public static final long GRANULAR_POLLING_INTERVAL = 10*1000L;
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
-		public static long SHORT_POLLING_INTERVAL =  15*60*1000L; 
+		public static final long SHORT_POLLING_INTERVAL =  15*60*1000L; 
 		public static final long LONG_POLLING_INTERVAL = 30*60*1000L;
 		
-		
+		public static final int ACCL_DATA_POINTS = 10;
 		
 		
 		public static String TAG = "CONTEXT_FRAMEWORK";
@@ -89,6 +89,8 @@ public class Constants {
 		public static String CONTEXT_CHANGE_NOTIFY = "CONTEXT_CHANGE_NOTIFY";
 		public static String INTENT_TYPE = "INTENT_TYPE";
 		
+		public static String INTERNAL_ACC_CHANGE_NOTIFY = "INTERNAL_ACC_CHANGE_NOTIFY";
+		
 		public static String LOC_NOTIFY = "LOC_UPDATE_NOTIFY";
 		public static String BATTERY_NOTIFY = "BATTERY_UPDATE_NOTIFY";
 		public static String SIGNAL_NOTIFY = "SIGNAL_UPDATE_NOTIFY";
@@ -98,4 +100,6 @@ public class Constants {
 		public static String PHONE_PROFILE_NOTIFY = "PHONE_PROFILE_NOTIFY";
 		public static String SCREEN_NOTIFY = "SCREEN_NOTIFY";
 		public static String APP_USAGE_NOTIFY = "APP_USAGE_NOTIFY";
+		public static String ACCL_NOTIFY = "ACCL_NOTIFY";
+		
 }

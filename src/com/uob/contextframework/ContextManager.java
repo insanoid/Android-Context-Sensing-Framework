@@ -133,9 +133,13 @@ public class ContextManager {
 			}
 
 			if(mService == ContextManagerServices.CTX_FRAMEWORK_APP_USAGE){
-				ContextMonitor.getInstance(mContext).initiateAppUsageMonitoringServices();
+				ContextMonitor.getInstance(mContext).initiateAppUsageMonitoringServices(pollingTime);
 				appUsageTimer = new Timer("APP_USAGE_TIMER");
 				appUsageTimer.schedule(appUsageUpdateTask, 0, minimumUpdateTime);
+			}
+			
+			if(mService == ContextManagerServices.CTX_FRAMEWORK_ACCL){
+				ContextMonitor.getInstance(mContext).initiateAccelerometerMonitoringServices(pollingTime);
 			}
 
 		}else{
@@ -226,6 +230,10 @@ public class ContextManager {
 			ContextMonitor.getInstance(mContext).stopAppUsageMonitoringServices();
 		}
 
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_ACCL){
+			ContextMonitor.getInstance(mContext).stopAccelerometerMonitoringServices();
+		}
+		
 	}
 
 
@@ -437,7 +445,6 @@ public class ContextManager {
 			});	
 		}
 	};
-
 
 
 	/**

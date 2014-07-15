@@ -25,9 +25,12 @@ import java.util.TimerTask;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -39,6 +42,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.uob.contextframework.baseclasses.AccelerometerInfoMonitor;
 import com.uob.contextframework.baseclasses.ApplicationModal;
 import com.uob.contextframework.baseclasses.ApplicationUsageInfo;
 import com.uob.contextframework.baseclasses.BatteryChargeType;
@@ -73,6 +77,7 @@ public class ContextMonitor {
 	private Timer bluetoothMonitorTimer;
 	private Timer phoneProfileMonitorTimer;
 	private Timer appUsageMonitorTimer;
+	private Timer accelerometerTimer;
 
 	//Location Context variables.
 	private Location bestAvailableLocation;
@@ -112,6 +117,12 @@ public class ContextMonitor {
 	//App Usage Monitoring Service
 	private ApplicationModal currentAppModel;
 
+	//Accelerometer Monitor Service
+	private AccelerometerInfoMonitor accelerometerInfoMonitor;
+	private SensorManager sensorManager;
+	private int accDataPoints;
+	private AccelrometerBroadCastReceiver mAccelrometerBroadCastReceiver;
+	
 	/**
 	 * Destroy connections if needed.
 	 */
@@ -123,6 +134,16 @@ public class ContextMonitor {
 		if(wifiBroadcastListner!=null)
 			mContext.unregisterReceiver(wifiBroadcastListner);
 
+		if(mAccelrometerBroadCastReceiver!=null){
+			mContext.unregisterReceiver(mAccelrometerBroadCastReceiver);
+			mAccelrometerBroadCastReceiver = null;
+		}
+		
+		if(screenStatusInfo!=null){
+			mContext.unregisterReceiver(screenStatusInfo);
+			screenStatusInfo = null;
+		}
+		
 	}
 
 	public static ContextMonitor getInstance(Context _ctx){
@@ -140,6 +161,7 @@ public class ContextMonitor {
 
 		mContext = context;
 		Handler h = new Handler(mContext.getMainLooper());
+
 
 		h.post(new Runnable() {
 			@Override
@@ -336,6 +358,7 @@ public class ContextMonitor {
 	 * Stops phone's profile monitoring.
 	 */
 	public void stopPhoneProfileServices(){
+
 		currentPhoneProfile = null;
 		if(phoneProfileMonitorTimer!=null){
 			phoneProfileMonitorTimer.cancel();
@@ -348,6 +371,7 @@ public class ContextMonitor {
 	 * Triggers the monitoring of the screen monitoring services.
 	 */
 	public void initiateScreenMonitoringServices() {
+
 		stopScreenMonitoringServices();
 
 		screenStatusInfo = new ScreenStatusInfo(mContext);
@@ -373,11 +397,12 @@ public class ContextMonitor {
 	/**
 	 * Triggers the monitoring of the application usage monitoring services.
 	 */
-	public void initiateAppUsageMonitoringServices() {
+	public void initiateAppUsageMonitoringServices(long pollingTime) {
+
 		stopAppUsageMonitoringServices();
 
 		appUsageMonitorTimer = new Timer("APP_USAGE_POLLER");
-		appUsageMonitorTimer.schedule(appUsageTask, 0, Constants.APP_POLLING_INTERVAL);
+		appUsageMonitorTimer.schedule(appUsageTask, 0, pollingTime>0?pollingTime:Constants.APP_POLLING_INTERVAL);
 
 	}
 
@@ -392,6 +417,59 @@ public class ContextMonitor {
 		appUsageMonitorTimer = null;
 		currentAppModel = null;
 	}
+
+	//Application Usage Monitoring
+	/**
+	 * Triggers the monitoring of accelerometer services.
+	 */
+	public void initiateAccelerometerMonitoringServices(long pollingTime) {
+
+		stopAccelerometerMonitoringServices();
+
+		mAccelrometerBroadCastReceiver = new AccelrometerBroadCastReceiver();
+		IntentFilter filterProx = new IntentFilter(com.uob.contextframework.support.Constants.INTERNAL_ACC_CHANGE_NOTIFY);
+		filterProx.addCategory(Intent.CATEGORY_DEFAULT);
+		mContext.registerReceiver(mAccelrometerBroadCastReceiver, filterProx);
+		
+		accelerometerTimer = new Timer("ACCL_POLLER");
+		accelerometerTimer.schedule(accelerometerTask, 0,  pollingTime>0?pollingTime:Constants.MINUTE_POLLING_INTERVAL);
+
+	}
+
+	/**
+	 * Stop accelerometer monitoring 
+	 */
+	public void stopAccelerometerMonitoringServices() {
+
+		if(accelerometerTimer!=null){
+			accelerometerTimer.cancel();
+		}
+		
+		accelerometerTimer = null;
+		stopAccScanning();
+		
+		if(mAccelrometerBroadCastReceiver!=null){
+			mContext.unregisterReceiver(mAccelrometerBroadCastReceiver);
+			mAccelrometerBroadCastReceiver = null;
+		}
+	}
+	
+/**
+ * Stop accelerometer scanning task temporarily.
+ */
+	private void stopAccScanning() {
+		
+		if(sensorManager!=null){
+			if(accelerometerInfoMonitor!=null){
+				
+				sensorManager.unregisterListener(accelerometerInfoMonitor);
+				accelerometerInfoMonitor = null;
+			}
+			sensorManager=null;
+		}
+	}
+
+
 
 	/****
 	 * Functions to handle tasks.
@@ -420,7 +498,6 @@ public class ContextMonitor {
 		@Override
 		public void run() {
 			int dataConnType = signalInfo.getDataConnectionState();
-			Log.e("CONTY",dataConnType+"");
 			updateDataState();
 			if(dataConnType!=signalInfo.getDataConnectionState()){
 				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
@@ -469,22 +546,34 @@ public class ContextMonitor {
 	private TimerTask appUsageTask = new TimerTask() {
 		@Override
 		public void run() {
-			
+
 			PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
 			Boolean isScreenOn = pm.isScreenOn();
-			
+
 			if(isScreenOn == true){
-			ApplicationModal newAppInfo = ApplicationUsageInfo.getForegroundAppInformation(mContext);
-			if(newAppInfo.isApplicationSimilar(currentAppModel)==false){
-				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);  
-				intent.putExtra(Constants.INTENT_TYPE, Constants.APP_USAGE_NOTIFY);
-				intent.putExtra(Constants.APP_USAGE_NOTIFY,newAppInfo.toString());
-				mContext.sendBroadcast(intent);
-			}
+				ApplicationModal newAppInfo = ApplicationUsageInfo.getForegroundAppInformation(mContext);
+				if(newAppInfo.isApplicationSimilar(currentAppModel)==false){
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);  
+					intent.putExtra(Constants.INTENT_TYPE, Constants.APP_USAGE_NOTIFY);
+					intent.putExtra(Constants.APP_USAGE_NOTIFY,newAppInfo.toString());
+					mContext.sendBroadcast(intent);
+				}
 			}
 		}
 	};
-
+	
+	private TimerTask accelerometerTask = new TimerTask() {
+		@Override
+		public void run() {
+			
+			accelerometerInfoMonitor = new AccelerometerInfoMonitor(mContext);
+			sensorManager=(SensorManager)mContext.getSystemService(Context.SENSOR_SERVICE);
+			// add listener. The listener will be HelloAndroid (this) class
+			sensorManager.registerListener(accelerometerInfoMonitor, 
+					sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),
+					SensorManager.SENSOR_DELAY_NORMAL);
+		}
+	};
 
 	/**
 	 * Function to update the present state of data connectivity.
@@ -724,4 +813,27 @@ public class ContextMonitor {
 	public void setScreenStatusInfo(ScreenStatusInfo screenStatusInfo) {
 		this.screenStatusInfo = screenStatusInfo;
 	}
+
+	//
+	
+	/**
+	 * Monitoring broadcasts from accelerometer.
+	 */
+	public class AccelrometerBroadCastReceiver extends BroadcastReceiver {
+
+		@Override
+		public void onReceive(Context context, Intent intent) {
+			accDataPoints++;
+			if(accDataPoints>=Constants.ACCL_DATA_POINTS){
+				accDataPoints = 0;
+				stopAccScanning();
+			}else{
+				Intent proxIntent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+				proxIntent.putExtra(Constants.INTENT_TYPE, Constants.ACCL_NOTIFY);
+				proxIntent.putExtra(Constants.ACCL_NOTIFY,intent.getStringExtra(com.uob.contextframework.support.Constants.ACCL_NOTIFY));
+				mContext.sendBroadcast(proxIntent);
+			}
+		}
+	}
+
 }

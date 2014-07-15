@@ -29,10 +29,12 @@ public class Constants {
 		public static long MAXIMUM_ACCEPTABLE_DISTANCE = 0;
 		
 		
+		public static final long APP_POLLING_INTERVAL = 4*1000L;
 		public static final long GRANULAR_POLLING_INTERVAL = 10*1000L;
 		public static final long MINUTE_POLLING_INTERVAL = 3*60*1000L;
 		public static long SHORT_POLLING_INTERVAL =  15*60*1000L; 
 		public static final long LONG_POLLING_INTERVAL = 30*60*1000L;
+		
 		
 		
 		
@@ -77,6 +79,11 @@ public class Constants {
 		
 		public static String SCREEN_STATE = "SCREEN_STATE";
 		
+		public static String APP_NAME = "APP_NAME";
+		public static String APP_PACKAGE = "APP_PACKAGE";
+		public static String APP_CONTENT = "APP_CONTENT";
+		public static String APP_IS_BROWSER = "APP_IS_BROWSER";
+		
 		// Intent Tags
 		
 		public static String CONTEXT_CHANGE_NOTIFY = "CONTEXT_CHANGE_NOTIFY";
@@ -90,4 +97,5 @@ public class Constants {
 		public static String BLUETOOTH_NOTIFY = "BLUETOOTH_UPDATE_NOTIFY";
 		public static String PHONE_PROFILE_NOTIFY = "PHONE_PROFILE_NOTIFY";
 		public static String SCREEN_NOTIFY = "SCREEN_NOTIFY";
+		public static String APP_USAGE_NOTIFY = "APP_USAGE_NOTIFY";
 }

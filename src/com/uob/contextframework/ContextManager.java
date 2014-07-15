@@ -28,6 +28,8 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
 
+import com.uob.contextframework.baseclasses.ApplicationModal;
+import com.uob.contextframework.baseclasses.ApplicationUsageInfo;
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.BluetoothInfo;
 import com.uob.contextframework.baseclasses.DeviceInfo;
@@ -47,7 +49,8 @@ import com.uob.contextframework.support.ContextManagerServices;
 public class ContextManager {
 
 	private Context mContext;
-	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer, eventsTimer, bluetoothTimer, phoneProfileTimer, screenStatusTimer;
+	private Timer locationTimer, batteryTimer, signalTimer, wifiTimer;
+	private Timer eventsTimer, bluetoothTimer, phoneProfileTimer, screenStatusTimer, appUsageTimer;
 
 
 	/**
@@ -116,19 +119,25 @@ public class ContextManager {
 				bluetoothTimer = new Timer("BLUETOOTH_TIMER");
 				bluetoothTimer.schedule(bluetoothUpdateTask, 0, minimumUpdateTime);
 			}
-			
+
 			if(mService == ContextManagerServices.CTX_FRAMEWORK_PHONE_SETTINGS){
 				ContextMonitor.getInstance(mContext).initiatePhoneProfileServices(pollingTime);
 				phoneProfileTimer = new Timer("PHONE_PROFILE_TIMER");
 				phoneProfileTimer.schedule(phoneProfileUpdateTask, 0, minimumUpdateTime);
 			}
-			
+
 			if(mService == ContextManagerServices.CTX_FRAMEWORK_SCREEN_STATUS){
 				ContextMonitor.getInstance(mContext).initiateScreenMonitoringServices();
 				screenStatusTimer = new Timer("SCREEN_STATUS_TIMER");
 				screenStatusTimer.schedule(screenStatusUpdateTask, 0, minimumUpdateTime);
 			}
-			
+
+			if(mService == ContextManagerServices.CTX_FRAMEWORK_APP_USAGE){
+				ContextMonitor.getInstance(mContext).initiateAppUsageMonitoringServices();
+				appUsageTimer = new Timer("APP_USAGE_TIMER");
+				appUsageTimer.schedule(appUsageUpdateTask, 0, minimumUpdateTime);
+			}
+
 		}else{
 			throw new Exception("Requires permission to monitor this context.");
 		}
@@ -156,7 +165,7 @@ public class ContextManager {
 				batteryTimer.cancel();
 				batteryTimer = null;
 			}
-			
+
 			ContextMonitor.getInstance(mContext).stopBatteryServices();
 		}
 
@@ -192,7 +201,7 @@ public class ContextManager {
 			}
 			ContextMonitor.getInstance(mContext).stopBluetoothServices();
 		}
-		
+
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_PHONE_SETTINGS){
 			if(phoneProfileTimer!=null){
 				phoneProfileTimer.cancel();
@@ -200,7 +209,7 @@ public class ContextManager {
 			}
 			ContextMonitor.getInstance(mContext).stopPhoneProfileServices();
 		}
-		
+
 		if(mService == ContextManagerServices.CTX_FRAMEWORK_SCREEN_STATUS){
 			if(screenStatusTimer!=null){
 				screenStatusTimer.cancel();
@@ -208,6 +217,15 @@ public class ContextManager {
 			}
 			ContextMonitor.getInstance(mContext).stopScreenMonitoringServices();
 		}
+
+		if(mService == ContextManagerServices.CTX_FRAMEWORK_APP_USAGE){
+			if(appUsageTimer!=null){
+				appUsageTimer.cancel();
+				appUsageTimer = null;
+			}
+			ContextMonitor.getInstance(mContext).stopAppUsageMonitoringServices();
+		}
+
 	}
 
 
@@ -222,10 +240,10 @@ public class ContextManager {
 			LocationInfo locationInfo = new LocationInfo(mContext);
 			Location loc = locationInfo.getLocation();
 			if(loc!=null){
-			Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
-			intent.putExtra(Constants.INTENT_TYPE, Constants.LOC_NOTIFY);
-			intent.putExtra(Constants.LOC_NOTIFY,loc);
-			mContext.sendBroadcast(intent);
+				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);
+				intent.putExtra(Constants.INTENT_TYPE, Constants.LOC_NOTIFY);
+				intent.putExtra(Constants.LOC_NOTIFY,loc);
+				mContext.sendBroadcast(intent);
 			}
 		}
 	};
@@ -253,7 +271,7 @@ public class ContextManager {
 		}
 	};
 
-	
+
 	/**
 	 * Network signal information broadcasting task.
 	 * Type : SIGNAL_NOTIFY
@@ -278,7 +296,7 @@ public class ContextManager {
 		}
 	};
 
-	
+
 	/**
 	 * Network signal information broadcasting task.
 	 * Type : WIFI_NOTIFY
@@ -303,7 +321,7 @@ public class ContextManager {
 		}
 	};
 
-	
+
 	/**
 	 * user event information broadcasting task.
 	 * Type : EVENT_NOTIFY
@@ -328,7 +346,7 @@ public class ContextManager {
 		}
 	};
 
-	
+
 	/**
 	 * Bluetooth network information broadcasting task.
 	 * Type : BLUETOOTH_NOTIFY
@@ -349,7 +367,7 @@ public class ContextManager {
 			});	
 		}
 	};
-	
+
 	/**
 	 * Phone setting information broadcasting task.
 	 * Type : PHONE_PROFILE_NOTIFY
@@ -373,7 +391,7 @@ public class ContextManager {
 			});	
 		}
 	};
-	
+
 	/**
 	 * Phone's screen status broadcasting task.
 	 * Type : SCREEN_STATUS_NOTIFY
@@ -395,7 +413,32 @@ public class ContextManager {
 			});	
 		}
 	};
-	
+
+	/**
+	 * app usage broadcasting task.
+	 * Type : APP_USAGE_NOTIFY
+	 */
+	private TimerTask appUsageUpdateTask = new TimerTask() {
+
+		@Override
+		public void run() {
+
+			Handler h = new Handler(mContext.getMainLooper());
+
+			h.post(new Runnable() {
+				@Override
+				public void run() {
+					ApplicationModal newAppInfo = ApplicationUsageInfo.getForegroundAppInformation(mContext);
+					Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);  
+					intent.putExtra(Constants.INTENT_TYPE, Constants.APP_USAGE_NOTIFY);
+					intent.putExtra(Constants.APP_USAGE_NOTIFY,newAppInfo.toString());
+					mContext.sendBroadcast(intent);
+				}
+			});	
+		}
+	};
+
+
 
 	/**
 	 * Provides information about the device in the form of a @{DeviceInfo} object.

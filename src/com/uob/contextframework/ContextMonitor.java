@@ -34,10 +34,13 @@ import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.telephony.PhoneStateListener;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.uob.contextframework.baseclasses.ApplicationModal;
+import com.uob.contextframework.baseclasses.ApplicationUsageInfo;
 import com.uob.contextframework.baseclasses.BatteryChargeType;
 import com.uob.contextframework.baseclasses.BatteryInfo;
 import com.uob.contextframework.baseclasses.BluetoothInfo;
@@ -69,6 +72,7 @@ public class ContextMonitor {
 	private Timer calendarMonitorTimer;
 	private Timer bluetoothMonitorTimer;
 	private Timer phoneProfileMonitorTimer;
+	private Timer appUsageMonitorTimer;
 
 	//Location Context variables.
 	private Location bestAvailableLocation;
@@ -102,7 +106,11 @@ public class ContextMonitor {
 	//Phone profile information.
 	private PhoneProfile currentPhoneProfile;
 
+	//Screen status.
 	private ScreenStatusInfo screenStatusInfo;
+
+	//App Usage Monitoring Service
+	private ApplicationModal currentAppModel;
 
 	/**
 	 * Destroy connections if needed.
@@ -361,7 +369,29 @@ public class ContextMonitor {
 	}
 
 
+	//Application Usage Monitoring
+	/**
+	 * Triggers the monitoring of the application usage monitoring services.
+	 */
+	public void initiateAppUsageMonitoringServices() {
+		stopAppUsageMonitoringServices();
 
+		appUsageMonitorTimer = new Timer("APP_USAGE_POLLER");
+		appUsageMonitorTimer.schedule(appUsageTask, 0, Constants.APP_POLLING_INTERVAL);
+
+	}
+
+	/**
+	 * Stop application usage monitoring 
+	 */
+	public void stopAppUsageMonitoringServices(){
+
+		if(appUsageMonitorTimer!=null){
+			appUsageMonitorTimer.cancel();
+		}
+		appUsageMonitorTimer = null;
+		currentAppModel = null;
+	}
 
 	/****
 	 * Functions to handle tasks.
@@ -432,6 +462,25 @@ public class ContextMonitor {
 				intent.putExtra(Constants.INTENT_TYPE, Constants.PHONE_PROFILE_NOTIFY);
 				intent.putExtra(Constants.PHONE_PROFILE_NOTIFY,	currentPhoneProfile.toString());
 				mContext.sendBroadcast(intent);
+			}
+		}
+	};
+
+	private TimerTask appUsageTask = new TimerTask() {
+		@Override
+		public void run() {
+			
+			PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+			Boolean isScreenOn = pm.isScreenOn();
+			
+			if(isScreenOn == true){
+			ApplicationModal newAppInfo = ApplicationUsageInfo.getForegroundAppInformation(mContext);
+			if(newAppInfo.isApplicationSimilar(currentAppModel)==false){
+				Intent intent = new Intent(Constants.CONTEXT_CHANGE_NOTIFY);  
+				intent.putExtra(Constants.INTENT_TYPE, Constants.APP_USAGE_NOTIFY);
+				intent.putExtra(Constants.APP_USAGE_NOTIFY,newAppInfo.toString());
+				mContext.sendBroadcast(intent);
+			}
 			}
 		}
 	};

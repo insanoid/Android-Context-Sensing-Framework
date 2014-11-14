@@ -43,7 +43,7 @@ To stop monitoring a particular context:
 
 ### License
 Copyright (c) 2014, University of Birmingham
-Karthikeya Udupa, kxu356@bham.ac.uk
+Karthikeya Udupa, karthikeyaudupa@gmail.com
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
